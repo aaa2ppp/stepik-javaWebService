@@ -1,7 +1,11 @@
 package main;
 
 import accounts.AccountService;
+import chat.WebSocketChatServlet;
+import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.handler.HandlerList;
+import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import serverlets.MirrorServlet;
@@ -24,14 +28,23 @@ public class Main {
             MirrorServlet mirror = new MirrorServlet();
             SignUpServlet signUp = new SignUpServlet(accountService);
             SignInServlet signIn = new SignInServlet(accountService);
+            WebSocketChatServlet chat = new WebSocketChatServlet();
 
             ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
             context.addServlet(new ServletHolder(mirror), "/mirror");
             context.addServlet(new ServletHolder(signUp), "/signup");
             context.addServlet(new ServletHolder(signIn), "/signin");
+            context.addServlet(new ServletHolder(chat), "/chat");
+
+            ResourceHandler resource_handler = new ResourceHandler();
+            resource_handler.setDirectoriesListed(true);
+            resource_handler.setResourceBase("public_html");
+
+            HandlerList handlers = new HandlerList();
+            handlers.setHandlers(new Handler[]{resource_handler, context});
 
             Server server = new Server(8080);
-            server.setHandler(context);
+            server.setHandler(handlers);
 
             server.start();
             System.err.println("Server started");
